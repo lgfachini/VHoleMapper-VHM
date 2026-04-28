@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+title: VHoleMapper-VHM
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Lucas Gian
+    family-names: Fachini
+    email: lgfachini@ufpr.br
+    affiliation: Universidade Federal do Paraná
+    orcid: 'https://orcid.org/0000-0003-1482-5209'
+repository-code: 'https://github.com/lgfachini/VHoleMapper-VHM/'
+abstract: >-
+  VHoleMapper (VHM) is a Python-based toolkit for detecting,
+  validating, and analyzing pi-holes on molecular electrostatic
+  potential surfaces from quantum chemistry calculations.
+  The program performs local reference-frame construction,
+  axial maximum detection, optional Moving Least Squares
+  derivative analysis, sector-based validation, and graphical
+  visualization of validated pi-hole candidates.
+keywords:
+  - pi-hole
+  - electrostatic potential
+  - molecular electrostatic potential
+  - noncovalent interactions
+  - quantum chemistry
+  - computational chemistry
+  - DFT
+license: GPL-3.0
+commit: 
+version: 0.0.1
+date-released: '2026-04-28'
+

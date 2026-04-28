@@ -1,0 +1,77 @@
+from __future__ import annotations
+
+from typing import Iterable, Optional, Tuple
+
+import numpy as np
+
+from models import LocalFrame
+
+
+def normalize(vec: np.ndarray) -> np.ndarray:
+    """Return a normalized vector."""
+    norm = np.linalg.norm(vec)
+    if norm < 1.0e-14:
+        raise ValueError("Cannot normalize a near-zero vector.")
+    return vec / norm
+
+
+def fit_plane_from_points(points: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """Fit a least-squares plane and return its centroid and normal vector."""
+    centroid = points.mean(axis=0)
+    centered = points - centroid
+    _, _, vh = np.linalg.svd(centered, full_matrices=False)
+    normal = normalize(vh[-1])
+    return centroid, normal
+
+
+def validate_atom_indices(atom_coords: np.ndarray, indices_1based: Iterable[int], label: str) -> None:
+    """Validate that 1-based atom indices are inside the XYZ atom range."""
+    natoms = len(atom_coords)
+    bad = [idx for idx in indices_1based if idx < 1 or idx > natoms]
+    if bad:
+        raise IndexError(f"Invalid {label} atom indices {bad}; XYZ contains {natoms} atoms.")
+
+
+def build_local_frame(
+    atom_coords: np.ndarray,
+    reference_indices_1based: Iterable[int],
+    orientation_atom_index_1based: Optional[int],
+) -> LocalFrame:
+    """Build a right-handed local frame from four reference atoms."""
+    reference_indices_1based = tuple(reference_indices_1based)
+    if len(reference_indices_1based) != 4:
+        raise ValueError("Exactly four reference atoms are required.")
+
+    validate_atom_indices(atom_coords, reference_indices_1based, "reference")
+    if orientation_atom_index_1based is not None:
+        validate_atom_indices(atom_coords, (orientation_atom_index_1based,), "orientation")
+
+    reference_idx0 = [idx - 1 for idx in reference_indices_1based]
+    reference_points = atom_coords[reference_idx0]
+    origin, z_axis = fit_plane_from_points(reference_points)
+
+    if orientation_atom_index_1based is not None:
+        orientation_point = atom_coords[orientation_atom_index_1based - 1]
+        orientation_vec = orientation_point - origin
+        if np.dot(orientation_vec, z_axis) < 0.0:
+            z_axis = -z_axis
+
+    first_ref_vec = atom_coords[reference_idx0[0]] - origin
+    first_ref_proj = first_ref_vec - np.dot(first_ref_vec, z_axis) * z_axis
+    x_axis = normalize(first_ref_proj)
+
+    y_axis = normalize(np.cross(z_axis, x_axis))
+    x_axis = normalize(np.cross(y_axis, z_axis))
+
+    rotation_matrix = np.vstack([x_axis, y_axis, z_axis])
+    return LocalFrame(origin=origin, rotation_matrix=rotation_matrix)
+
+
+def to_local(coords: np.ndarray, frame: LocalFrame) -> np.ndarray:
+    """Transform global coordinates to the local frame."""
+    return (coords - frame.origin) @ frame.rotation_matrix.T
+
+
+def to_global(local_coords: np.ndarray, frame: LocalFrame) -> np.ndarray:
+    """Transform local coordinates to the global frame."""
+    return local_coords @ frame.rotation_matrix + frame.origin

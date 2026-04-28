@@ -1,0 +1,53 @@
+VALIDATED PI-HOLES
+================================================================================
+
+Candidate 1
+--------------------------------------------------------------------------------
+Side: below
+Point index: 4137
+Local coordinates (Å): (0.007261, -0.001271, -1.739849)
+Global coordinates (Å): (8.398459, 1.662949, 25.112638)
+V_s,max (kcal/mol): -16.577893
+Number of MLS neighbors: None
+|grad V| 3D (kcal mol^-1 Å^-1): nan
+grad V 3D = (nan, nan, nan)
+3D Hessian eigenvalues: (nan, nan, nan)
+Shift to 3D stationary point (Å): None
+|grad V| tangential (kcal mol^-1 Å^-1): nan
+Tangential grad V = (nan, nan)
+Tangential Hessian eigenvalues: (nan, nan)
+Shift to tangential stationary point (Å): None
+V_hole,mean (kcal/mol): -9.287349
+V_hole,max (kcal/mol): -8.723613
+V_hole,min (kcal/mol): -10.086855
+Delta V_hole (kcal/mol): 1.363242
+Anisotropy angle (degrees): 90.000000
+Minimum sector: S1
+Maximum sector: S3
+Note: Validated.
+
+Candidate 2
+--------------------------------------------------------------------------------
+Side: above
+Point index: 5563
+Local coordinates (Å): (0.009848, 0.035881, 1.740825)
+Global coordinates (Å): (9.454898, -1.653737, 25.110053)
+V_s,max (kcal/mol): -16.583212
+Number of MLS neighbors: None
+|grad V| 3D (kcal mol^-1 Å^-1): nan
+grad V 3D = (nan, nan, nan)
+3D Hessian eigenvalues: (nan, nan, nan)
+Shift to 3D stationary point (Å): None
+|grad V| tangential (kcal mol^-1 Å^-1): nan
+Tangential grad V = (nan, nan)
+Tangential Hessian eigenvalues: (nan, nan)
+Shift to tangential stationary point (Å): None
+V_hole,mean (kcal/mol): -9.221383
+V_hole,max (kcal/mol): -8.480644
+V_hole,min (kcal/mol): -9.802527
+Delta V_hole (kcal/mol): 1.321883
+Anisotropy angle (degrees): 135.000000
+Minimum sector: S5
+Maximum sector: S2
+Note: Validated.
+
