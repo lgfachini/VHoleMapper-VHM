@@ -142,6 +142,15 @@ The workflow consists of:
 * Sector validation is robust against charged systems
 
 ---
+## 📄 Citation
+
+If you happen to use this software, please cite:
+
+Quantitative Analysis of Metal-Centered π-Holes in {TM(cyclen)}2+ Complexes
+journal: Inorganic Chemistry
+year: 2026
+doi: 10.1021/acs.inorgchem.6c01328
+---
 
 ## 👨‍🔬 Author
 
