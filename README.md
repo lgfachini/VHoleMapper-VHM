@@ -146,10 +146,13 @@ The workflow consists of:
 
 If you happen to use this software, please cite:
 
-Quantitative Analysis of Metal-Centered π-Holes in {TM(cyclen)}2+ Complexes
-journal: Inorganic Chemistry
-year: 2026
-doi: 10.1021/acs.inorgchem.6c01328
+*Quantitative Analysis of Metal-Centered π-Holes in {TM(cyclen)}2+ Complexes*
+
+Journal: *ACS Inorganic Chemistry*
+
+Year: 2026
+
+DOI: 10.1021/acs.inorgchem.6c01328
 
 ---
 
