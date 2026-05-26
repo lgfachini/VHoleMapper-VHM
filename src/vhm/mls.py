@@ -5,9 +5,9 @@ from typing import Optional, Tuple
 import numpy as np
 from scipy.spatial import cKDTree
 
-from config import AnalysisConfig
-from geometry import normalize
-from models import MlsFit
+from .config import AnalysisConfig
+from .geometry import normalize
+from .models import MlsFit
 
 
 def gaussian_weights(distances: np.ndarray, sigma: float) -> np.ndarray:
@@ -208,7 +208,7 @@ def mls_candidate_ok(fit: Optional[MlsFit], config: AnalysisConfig) -> Tuple[boo
             return False, (
                 "Tangential stationary point is too far "
                 f"({fit.tangential_stationary_shift:.4f} > "
-                f"{config.max_tangential_stationary_shift:.4f} Å)."
+                f"{config.max_tangential_stationary_shift:.4f} Angstrom)."
             )
 
     return True, "Tangential MLS test passed."

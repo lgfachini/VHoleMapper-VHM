@@ -4,7 +4,7 @@ from typing import Iterable, Optional, Tuple
 
 import numpy as np
 
-from models import LocalFrame
+from .models import LocalFrame
 
 
 def normalize(vec: np.ndarray) -> np.ndarray:

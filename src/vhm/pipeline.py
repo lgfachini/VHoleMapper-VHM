@@ -5,15 +5,15 @@ from typing import List, Tuple
 import numpy as np
 from scipy.spatial import cKDTree
 
-from config import AnalysisConfig, MoleculePaths, TargetSpec, make_paths
-from geometry import build_local_frame, to_local
-from io_utils import read_vtx, read_xyz
-from mls import mls_candidate_ok, mls_local_fit
-from models import CandidateResult, LocalFrame
-from outputs import format_optional, save_candidates_csv, save_molecule_with_piholes_xyz, save_validated_txt
-from plotting import save_pihole_plots
-from search import find_local_maxima, get_side_mask
-from sector import sector_validation
+from .config import AnalysisConfig, MoleculePaths, TargetSpec, make_paths
+from .geometry import build_local_frame, to_local
+from .io_utils import read_vtx, read_xyz
+from .mls import mls_candidate_ok, mls_local_fit
+from .models import CandidateResult, LocalFrame
+from .outputs import format_optional, save_candidates_csv, save_molecule_with_piholes_xyz, save_validated_txt
+from .plotting import save_pihole_plots
+from .search import find_local_maxima, get_side_mask
+from .sector import sector_validation
 
 
 def analyze_molecule(
@@ -40,7 +40,7 @@ def analyze_molecule(
     )
 
     if config.print_debug:
-        print(f"[INFO] Local frame origin (Å): {frame.origin}")
+        print(f"[INFO] Local frame origin (Angstrom): {frame.origin}")
         print("[INFO] Rotation matrix:")
         print(frame.rotation_matrix)
 
@@ -134,7 +134,7 @@ def print_summary(molecule_name: str, results: List[CandidateResult]) -> None:
             lambda_max_tan = max(result.tangential_hess_eig1, result.tangential_hess_eig2)
             print(
                 f"{counter:2d}) side={result.side:5s} | "
-                f"z={result.z_local:8.4f} Å | "
+                f"z={result.z_local:8.4f} Angstrom | "
                 f"Vs,max={result.vs_max:10.4f} | "
                 f"|grad_tan|={result.tangential_grad_norm:10.4f} | "
                 f"lambda_max_tan={lambda_max_tan:10.4f} | "
@@ -147,6 +147,8 @@ def print_summary(molecule_name: str, results: List[CandidateResult]) -> None:
 
 def run_batch(config: AnalysisConfig) -> None:
     """Run the analysis for all targets listed in config.targets."""
+    failures: List[Tuple[TargetSpec, Exception]] = []
+
     for target in config.targets:
         try:
             results, symbols, atom_coords, local_coords, _potentials, frame, paths = analyze_molecule(target, config)
@@ -157,4 +159,11 @@ def run_batch(config: AnalysisConfig) -> None:
             print(f"[INFO] XYZ saved to: {paths.output_pihole_xyz}")
             print(f"[INFO] Plots saved to: {paths.output_plot_dir}")
         except Exception as exc:
+            if not config.continue_on_error:
+                raise
+            failures.append((target, exc))
             print(f"[ERROR] Analysis failed for {target.folder}: {exc}")
+
+    if failures:
+        failed = ", ".join(str(target.folder) for target, _exc in failures)
+        raise RuntimeError(f"Analysis failed for {len(failures)} target(s): {failed}")

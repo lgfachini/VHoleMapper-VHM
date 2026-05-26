@@ -5,7 +5,7 @@ from typing import List
 import numpy as np
 from scipy.spatial import cKDTree
 
-from config import AnalysisConfig
+from .config import AnalysisConfig
 
 
 def get_side_mask(local_coords: np.ndarray, side: str, config: AnalysisConfig) -> np.ndarray:

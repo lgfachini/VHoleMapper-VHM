@@ -29,6 +29,22 @@ class TargetSpec:
     xyz_filename: Optional[str] = None
     vtx_filename: str = "vtx.txt"
 
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "folder", Path(self.folder))
+        object.__setattr__(
+            self,
+            "reference_atom_indices_1based",
+            tuple(self.reference_atom_indices_1based),
+        )
+        if len(self.reference_atom_indices_1based) != 4:
+            raise ValueError("reference_atom_indices_1based must contain exactly four atoms.")
+        if any(index < 1 for index in self.reference_atom_indices_1based):
+            raise ValueError("reference atom indices must use positive 1-based indexing.")
+        if self.orientation_atom_index_1based is not None and self.orientation_atom_index_1based < 1:
+            raise ValueError("orientation_atom_index_1based must be positive when set.")
+        if not str(self.vtx_filename).strip():
+            raise ValueError("vtx_filename must be non-empty.")
+
 
 @dataclass(frozen=True)
 class AnalysisConfig:
@@ -147,6 +163,53 @@ class AnalysisConfig:
     # Runtime controls
     # -------------------------------------------------------------------------
     print_debug: bool = True
+    continue_on_error: bool = False
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "targets", tuple(self.targets))
+        if not self.targets:
+            raise ValueError("targets must contain at least one TargetSpec.")
+
+        units = {"angstrom", "bohr"}
+        if self.xyz_coord_unit.lower().strip() not in units:
+            raise ValueError("xyz_coord_unit must be 'angstrom' or 'bohr'.")
+        if self.vtx_coord_unit.lower().strip() not in units:
+            raise ValueError("vtx_coord_unit must be 'angstrom' or 'bohr'.")
+        if self.bohr_to_ang <= 0.0:
+            raise ValueError("bohr_to_ang must be positive.")
+
+        positive_fields = {
+            "max_distance_from_axis": self.max_distance_from_axis,
+            "z_search_min": self.z_search_min,
+            "z_search_max": self.z_search_max,
+            "local_max_radius": self.local_max_radius,
+            "mls_radius": self.mls_radius,
+            "mls_sigma": self.mls_sigma,
+            "sector_inner_radius": self.sector_inner_radius,
+            "sector_outer_radius": self.sector_outer_radius,
+            "sector_half_height": self.sector_half_height,
+            "max_tangential_stationary_shift": self.max_tangential_stationary_shift,
+        }
+        for name, value in positive_fields.items():
+            if value <= 0.0:
+                raise ValueError(f"{name} must be positive.")
+
+        if self.z_search_min >= self.z_search_max:
+            raise ValueError("z_search_min must be smaller than z_search_max.")
+        if self.sector_inner_radius >= self.sector_outer_radius:
+            raise ValueError("sector_inner_radius must be smaller than sector_outer_radius.")
+        if self.min_local_neighbors < 1:
+            raise ValueError("min_local_neighbors must be at least 1.")
+        if self.mls_min_neighbors < 1:
+            raise ValueError("mls_min_neighbors must be at least 1.")
+        if self.angular_sectors < 2:
+            raise ValueError("angular_sectors must be at least 2.")
+        if self.min_points_per_sector < 1:
+            raise ValueError("min_points_per_sector must be at least 1.")
+        if self.top_n_candidates_per_side is not None and self.top_n_candidates_per_side < 1:
+            raise ValueError("top_n_candidates_per_side must be positive when set.")
+        if len(self.plot_figsize) != 2 or any(size <= 0.0 for size in self.plot_figsize):
+            raise ValueError("plot_figsize must contain two positive values.")
 
 
 @dataclass(frozen=True)

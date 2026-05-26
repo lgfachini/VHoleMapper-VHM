@@ -7,7 +7,7 @@ from typing import List, Optional
 
 import numpy as np
 
-from models import CandidateResult
+from .models import CandidateResult
 
 
 def save_candidates_csv(results: List[CandidateResult], out_csv: Path) -> None:
@@ -53,18 +53,18 @@ def save_validated_txt(results: List[CandidateResult], out_txt: Path) -> None:
             handle.write("-" * 80 + "\n")
             handle.write(f"Side: {result.side}\n")
             handle.write(f"Point index: {result.point_index}\n")
-            handle.write(f"Local coordinates (Å): ({result.x_local:.6f}, {result.y_local:.6f}, {result.z_local:.6f})\n")
-            handle.write(f"Global coordinates (Å): ({result.x_global:.6f}, {result.y_global:.6f}, {result.z_global:.6f})\n")
+            handle.write(f"Local coordinates (Angstrom): ({result.x_local:.6f}, {result.y_local:.6f}, {result.z_local:.6f})\n")
+            handle.write(f"Global coordinates (Angstrom): ({result.x_global:.6f}, {result.y_global:.6f}, {result.z_global:.6f})\n")
             handle.write(f"V_s,max (kcal/mol): {result.vs_max:.6f}\n")
             handle.write(f"Number of MLS neighbors: {result.n_mls_neighbors}\n")
-            handle.write(f"|grad V| 3D (kcal mol^-1 Å^-1): {format_optional(result.grad_norm)}\n")
+            handle.write(f"|grad V| 3D (kcal mol^-1 Angstrom^-1): {format_optional(result.grad_norm)}\n")
             handle.write(f"grad V 3D = ({format_optional(result.grad_x)}, {format_optional(result.grad_y)}, {format_optional(result.grad_z)})\n")
             handle.write(f"3D Hessian eigenvalues: ({format_optional(result.hess_eig1)}, {format_optional(result.hess_eig2)}, {format_optional(result.hess_eig3)})\n")
-            handle.write(f"Shift to 3D stationary point (Å): {format_optional(result.stationary_shift)}\n")
-            handle.write(f"|grad V| tangential (kcal mol^-1 Å^-1): {format_optional(result.tangential_grad_norm)}\n")
+            handle.write(f"Shift to 3D stationary point (Angstrom): {format_optional(result.stationary_shift)}\n")
+            handle.write(f"|grad V| tangential (kcal mol^-1 Angstrom^-1): {format_optional(result.tangential_grad_norm)}\n")
             handle.write(f"Tangential grad V = ({format_optional(result.tangential_grad_u)}, {format_optional(result.tangential_grad_v)})\n")
             handle.write(f"Tangential Hessian eigenvalues: ({format_optional(result.tangential_hess_eig1)}, {format_optional(result.tangential_hess_eig2)})\n")
-            handle.write(f"Shift to tangential stationary point (Å): {format_optional(result.tangential_stationary_shift)}\n")
+            handle.write(f"Shift to tangential stationary point (Angstrom): {format_optional(result.tangential_stationary_shift)}\n")
             handle.write(f"V_hole,mean (kcal/mol): {format_optional(result.vhole_mean)}\n")
             handle.write(f"V_hole,max (kcal/mol): {format_optional(result.vhole_max)}\n")
             handle.write(f"V_hole,min (kcal/mol): {format_optional(result.vhole_min)}\n")

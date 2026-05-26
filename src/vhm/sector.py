@@ -4,9 +4,9 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 
-from config import AnalysisConfig
-from geometry import to_global
-from models import CandidateResult, LocalFrame, MlsFit
+from .config import AnalysisConfig
+from .geometry import to_global
+from .models import CandidateResult, LocalFrame, MlsFit
 
 
 def wrap_angle_deg(angle: float) -> float:

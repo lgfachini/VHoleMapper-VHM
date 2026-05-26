@@ -1,152 +1,136 @@
-# 🧲 VHoleMapper (VHM): A π-Hole Detection and Analysis Toolkit
+# VHoleMapper (VHM)
 
-VHoleMapper (VHM) is a Python-based toolkit for detecting, validating, and analyzing **π-holes** on molecular electrostatic potential (ESP) surfaces.
+VHoleMapper is a Python toolkit for detecting, validating, and analyzing pi-holes on molecular electrostatic potential (ESP) surfaces.
 
-It is designed for high-throughput workflows and supports automated analysis of multiple molecular systems using ESP data (e.g., `vtx.txt`) and molecular geometries (`.xyz`).
+It supports batch workflows where each molecular system has its own folder with an ESP surface file (`vtx.txt`) and an XYZ geometry.
 
----
+## Features
 
-## ⚙️ Features
+- Automatic pi-hole candidate detection from local ESP maxima
+- Local reference frame construction from four user-selected atoms
+- Above/below plane searches with configurable axial and radial windows
+- Optional Moving Least Squares (MLS) derivative validation
+- Sector-based validation of pi-hole anisotropy
+- CSV, TXT, XYZ, and SVG outputs
 
-* 🔍 **Automatic π-hole detection** via local maxima search
-* 📐 **Local reference frame construction** from user-defined atoms
-* 📊 **Sector-based validation** of π-hole anisotropy
-* 🧮 Optional **MLS (Moving Least Squares)** derivative validation
-* 🧭 **Tangential gradient and Hessian analysis**
-* 📁 Batch processing of multiple molecular systems
-* 📈 **2D planar visualization** of π-holes and anisotropy
-* 📄 Output formats:
+## Project Structure
 
-  * CSV (all candidates)
-  * TXT (validated π-holes)
-  * XYZ (molecule + dummy π-hole atoms)
-  * SVG (sector plots)
-
----
-
-## 📁 Project Structure
-
-```
-VHoleMapper/
-├── main.py             # Entry point (user controls everything here)
-├── config.py           # Global configuration and parameters
-├── pipeline.py         # Main workflow orchestration
-├── geometry.py         # Local frame construction and transformations
-├── search.py           # Local maxima detection
-├── mls.py              # MLS fitting and derivative analysis
-├── sector.py           # Sector-based validation
-├── plotting.py         # Visualization tools
-├── outputs.py          # File export (CSV, TXT, XYZ)
-├── io_utils.py         # File parsing (XYZ, VTX)
-├── models.py           # Data structures
-└── data/               # Input folders (one system per folder)
+```text
+VHoleMapper-VHM/
+  main.py                  # Backward-compatible runner
+  pyproject.toml           # Packaging and test configuration
+  requirements.txt
+  config/
+    settings.py            # User-editable run settings
+    settings.example.py
+  src/
+    vhm/
+      cli.py               # Command-line driver
+      config.py            # Dataclasses and path resolution
+      pipeline.py          # Workflow orchestration
+      geometry.py          # Local frame and coordinate transforms
+      io_utils.py          # XYZ and VTX parsing
+      search.py            # Local maximum detection
+      mls.py               # MLS fitting and derivative checks
+      sector.py            # Sector validation
+      outputs.py           # CSV/TXT/XYZ writers
+      plotting.py          # SVG plots
+      models.py            # Result/data models
+  tests/
+  data/
 ```
 
----
-
-## ▶️ How to Use
-
-### 1. Install Dependencies
+## Install
 
 ```bash
-pip install numpy scipy matplotlib
+pip install -e .
 ```
 
----
+For development:
 
-### 2. Prepare Input Data
-
-Each system must be inside its own folder:
-
+```bash
+pip install -e ".[dev]"
 ```
+
+## Input Layout
+
+Each system should live in its own folder:
+
+```text
 data/
-└── system_name/
-    ├── vtx.txt
-    └── system_name.xyz
+  benzene/
+    benzene.xyz
+    vtx.txt
+  f6benzene/
+    f6benzene.xyz
+    vtx.txt
 ```
 
----
+If `AUTO_XYZ_FILENAME` is `None`, VHM expects the XYZ filename to match the folder name.
 
-### 3. Configure `main.py`
+## Configure
 
-Choose one mode:
+Edit [config/settings.py](config/settings.py).
 
-#### 🔹 Automatic mode
+Automatic mode scans `DATA_DIR` and applies the same reference atoms to every folder:
 
 ```python
 RUN_MODE = "auto"
 DATA_DIR = Path("data")
+AUTO_REFERENCE_ATOMS = (1, 3, 6, 10)
 ```
 
-Uses the same reference atoms for all folders.
-
-#### 🔹 Manual mode
+Manual mode lets each target use its own atoms and filenames:
 
 ```python
 RUN_MODE = "manual"
 
 MANUAL_TARGETS = (
     TargetSpec(
-        folder=Path("data/system"),
-        reference_atom_indices_1based=(1,2,3,4),
+        folder=Path("data/benzene"),
+        reference_atom_indices_1based=(1, 3, 6, 10),
         orientation_atom_index_1based=None,
     ),
 )
 ```
 
-Allows different definitions per system.
+Atom indices are 1-based.
 
----
+## Run
 
-### 4. Run
+From the project root:
 
 ```bash
 python main.py
 ```
 
----
+After installing the package:
 
-## 📊 Outputs
+```bash
+vhm
+```
 
-For each system:
+## Outputs
 
-* `pi_hole_candidates.csv` → all detected candidates
-* `pi_holes_validated.txt` → validated π-holes
-* `molecule_with_piholes.xyz` → geometry + dummy atoms
-* `pihole_plots/` → SVG visualizations
+For each system folder, VHM writes:
 
----
+- `pi_hole_candidates.csv`: all analyzed candidates
+- `pi_holes_validated.txt`: human-readable validated pi-hole report
+- `molecule_with_piholes.xyz`: molecule plus dummy `X` atoms at validated pi-holes
+- `pihole_plots/`: SVG sector plots
 
-## 📚 Methodology
+## Notes
 
-The workflow consists of:
+- XYZ coordinates default to angstrom.
+- VTX coordinates default to bohr and are converted to angstrom.
+- ESP values are assumed to be in kcal/mol.
+- `delta_thr` is the minimum accepted `V_hole,mean`.
 
-1. **Local frame definition** from 4 reference atoms
-2. **Axial search** for ESP maxima
-3. Optional **MLS derivative validation**
-4. **Sector-based validation** using angular partitioning
-5. Extraction of:
+## Citation
 
-   * Vₛ,max
-   * Vhole,mean
-   * ΔVhole
-   * anisotropy angle
+If you use this software, please cite:
 
----
-
-## 📌 Notes
-
-* Atom indices are **1-based**
-* Coordinates are internally handled in **angstrom**
-* ESP values are assumed in **kcal/mol**
-* Sector validation is robust against charged systems
-
----
-## 📄 Citation
-
-If you happen to use this software, please cite:
-
-*Quantitative Analysis of Metal-Centered π-Holes in {TM(cyclen)}2+ Complexes*
+*Quantitative Analysis of Metal-Centered pi-Holes in {TM(cyclen)}2+ Complexes*
 
 Journal: *ACS Inorganic Chemistry*
 
@@ -154,30 +138,6 @@ Year: 2026
 
 DOI: 10.1021/acs.inorgchem.6c01328
 
----
-
-## 👨‍🔬 Author
-
-Lucas Gian Fachini
-*PhD Candidate in Inorganic and Theoretical Chemistry*
-
-GitHub: https://github.com/lgfachini
-
----
-
-## 📄 License
+## License
 
 This project is licensed under the GPL-3.0 License.
-
----
-
-## 💡 Acknowledgments
-
-Concepts used in this project include:
-
-* Electrostatic potential analysis
-* σ-hole and π-hole theory
-* Directional non-covalent interactions
-* Local surface fitting and curvature analysis
-
----

@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Circle, Wedge
 
-from config import AnalysisConfig
-from geometry import to_local
-from models import CandidateResult, LocalFrame
+from .config import AnalysisConfig
+from .geometry import to_local
+from .models import CandidateResult, LocalFrame
 
 
 def plot_reference_atoms(
@@ -166,8 +166,8 @@ def plot_pihole_planar_view(
     plot_shell_points(ax, result, local_coords_surface, config)
 
     delta_for_title = result.delta_vhole if result.delta_vhole is not None else float("nan")
-    ax.set_xlabel("x_local (Å)")
-    ax.set_ylabel("y_local (Å)")
+    ax.set_xlabel("x_local (Angstrom)")
+    ax.set_ylabel("y_local (Angstrom)")
     ax.set_title(
         f"{result.side} | point {result.point_index} | "
         f"Vs,max = {result.vs_max:.2f} kcal/mol | "
