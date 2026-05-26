@@ -1,15 +1,17 @@
-"""VHoleMapper: pi-hole detection and analysis tools."""
+"""VHoleMapper: pi-hole and sigma-hole detection and analysis tools."""
 
-from .config import AnalysisConfig, MoleculePaths, TargetSpec, make_paths
+from .config import AnalysisConfig, AnalysisTarget, MoleculePaths, SigmaTargetSpec, TargetSpec, make_paths
 
 __version__ = "0.1.0"
 
 __all__ = [
     "AnalysisConfig",
+    "AnalysisTarget",
     "CandidateResult",
     "LocalFrame",
     "MlsFit",
     "MoleculePaths",
+    "SigmaTargetSpec",
     "TargetSpec",
     "__version__",
     "analyze_molecule",

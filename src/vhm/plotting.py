@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,6 +31,27 @@ def plot_reference_atoms(
 
     if config.plot_atom_labels:
         for idx_1based, symbol, coord in zip(reference_atom_indices_1based, reference_symbols, reference_coords_local):
+            ax.text(coord[0], coord[1], f"{symbol}{idx_1based}", fontsize=10, ha="center", va="center", color="black")
+
+
+def plot_bond_atoms(
+    ax: plt.Axes,
+    atom_symbols: List[str],
+    atom_coords_global: np.ndarray,
+    frame: LocalFrame,
+    bond_atom_indices_1based: Tuple[int, int],
+    config: AnalysisConfig,
+) -> None:
+    """Plot the ordered bond atoms projected onto the sigma-hole plane."""
+    bond_idx0 = [idx - 1 for idx in bond_atom_indices_1based]
+    bond_symbols = [atom_symbols[idx] for idx in bond_idx0]
+    bond_coords_global = atom_coords_global[bond_idx0]
+    bond_coords_local = to_local(bond_coords_global, frame)
+
+    ax.scatter(bond_coords_local[:, 0], bond_coords_local[:, 1], s=300, marker="o", color="green")
+
+    if config.plot_atom_labels:
+        for idx_1based, symbol, coord in zip(bond_atom_indices_1based, bond_symbols, bond_coords_local):
             ax.text(coord[0], coord[1], f"{symbol}{idx_1based}", fontsize=10, ha="center", va="center", color="black")
 
 
@@ -133,7 +154,7 @@ def plot_shell_points(ax: plt.Axes, result: CandidateResult, local_coords_surfac
         & (np.abs(dz) <= config.sector_half_height)
     )
 
-    if result.side == "above":
+    if result.side in {"above", "forward"}:
         shell_mask &= local_coords_surface[:, 2] > 0.0
     else:
         shell_mask &= local_coords_surface[:, 2] < 0.0
@@ -143,23 +164,28 @@ def plot_shell_points(ax: plt.Axes, result: CandidateResult, local_coords_surfac
         ax.scatter(shell_points[:, 0], shell_points[:, 1], s=10, alpha=0.5)
 
 
-def plot_pihole_planar_view(
+def plot_hole_planar_view(
     atom_symbols: List[str],
     atom_coords_global: np.ndarray,
     frame: LocalFrame,
-    reference_atom_indices_1based: Tuple[int, int, int, int],
+    reference_atom_indices_1based: Optional[Tuple[int, int, int, int]],
+    bond_atom_indices_1based: Optional[Tuple[int, int]],
     result: CandidateResult,
     out_svg: Path,
     local_coords_surface: np.ndarray,
     config: AnalysisConfig,
+    hole_label: str,
 ) -> None:
-    """Create a 2D plot in the reference plane."""
+    """Create a 2D plot in the plane perpendicular to the local z axis."""
     fig, ax = plt.subplots(figsize=config.plot_figsize)
 
-    plot_reference_atoms(ax, atom_symbols, atom_coords_global, frame, reference_atom_indices_1based, config)
+    if reference_atom_indices_1based is not None:
+        plot_reference_atoms(ax, atom_symbols, atom_coords_global, frame, reference_atom_indices_1based, config)
+    if bond_atom_indices_1based is not None:
+        plot_bond_atoms(ax, atom_symbols, atom_coords_global, frame, bond_atom_indices_1based, config)
 
     ax.scatter([result.x_local], [result.y_local], s=180, marker="x")
-    ax.text(result.x_local, result.y_local, "    pi-hole", fontsize=10, va="bottom", ha="left")
+    ax.text(result.x_local, result.y_local, f"    {hole_label}", fontsize=10, va="bottom", ha="left")
 
     plot_sector_geometry(ax, result, config)
     plot_anisotropy_angle(ax, result, config)
@@ -192,19 +218,50 @@ def save_pihole_plots(
     out_dir: Path,
     config: AnalysisConfig,
 ) -> None:
-    """Save SVG plots for selected candidates."""
+    """Save SVG plots for selected pi-hole candidates."""
+    save_hole_plots(
+        atom_symbols=atom_symbols,
+        atom_coords_global=atom_coords_global,
+        frame=frame,
+        reference_atom_indices_1based=reference_atom_indices_1based,
+        bond_atom_indices_1based=None,
+        local_coords_surface=local_coords_surface,
+        results=results,
+        out_dir=out_dir,
+        config=config,
+        hole_label="pi-hole",
+        filename_prefix="pihole",
+    )
+
+
+def save_hole_plots(
+    atom_symbols: List[str],
+    atom_coords_global: np.ndarray,
+    frame: LocalFrame,
+    reference_atom_indices_1based: Optional[Tuple[int, int, int, int]],
+    bond_atom_indices_1based: Optional[Tuple[int, int]],
+    local_coords_surface: np.ndarray,
+    results: List[CandidateResult],
+    out_dir: Path,
+    config: AnalysisConfig,
+    hole_label: str,
+    filename_prefix: str,
+) -> None:
+    """Save SVG plots for selected hole candidates."""
     out_dir.mkdir(parents=True, exist_ok=True)
     selected = [result for result in results if result.validated] if config.plot_only_validated else results
 
     for counter, result in enumerate(selected, start=1):
-        filename = f"pihole_{counter:02d}_{result.side}_idx{result.point_index}.svg"
-        plot_pihole_planar_view(
+        filename = f"{filename_prefix}_{counter:02d}_{result.side}_idx{result.point_index}.svg"
+        plot_hole_planar_view(
             atom_symbols=atom_symbols,
             atom_coords_global=atom_coords_global,
             frame=frame,
             reference_atom_indices_1based=reference_atom_indices_1based,
+            bond_atom_indices_1based=bond_atom_indices_1based,
             result=result,
             out_svg=out_dir / filename,
             local_coords_surface=local_coords_surface,
             config=config,
+            hole_label=hole_label,
         )

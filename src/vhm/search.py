@@ -30,6 +30,18 @@ def get_side_mask(local_coords: np.ndarray, side: str, config: AnalysisConfig) -
     raise ValueError("side must be either 'above' or 'below'.")
 
 
+def get_sigma_mask(local_coords: np.ndarray, config: AnalysisConfig) -> np.ndarray:
+    """Return a mask for points in the forward bond-extension cylinder."""
+    z = local_coords[:, 2]
+    radial = np.sqrt(local_coords[:, 0] ** 2 + local_coords[:, 1] ** 2)
+
+    return (
+        (z >= config.z_search_min)
+        & (z <= config.z_search_max)
+        & (radial <= config.max_distance_from_axis)
+    )
+
+
 def find_local_maxima(
     local_coords: np.ndarray,
     potentials: np.ndarray,

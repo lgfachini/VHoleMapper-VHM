@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from vhm import TargetSpec
+from vhm import SigmaTargetSpec, TargetSpec
 
 
 # Edit this file for your calculations.
@@ -24,6 +24,11 @@ from vhm import TargetSpec
 #   "manual" -> analyze only the folders listed in MANUAL_TARGETS.
 RUN_MODE = "auto"
 
+# Select which hole type to search.
+#   "pi"    -> current plane-normal search from four reference atoms.
+#   "sigma" -> bond-extension search from two ordered bond atoms.
+HOLE_TYPE = "pi"
+
 # Root folder containing one subfolder per molecular system.
 # Relative paths are resolved from the project root.
 DATA_DIR = Path("data")
@@ -39,6 +44,11 @@ AUTO_FOLDER_GLOB = "*"
 # local frame. Choose atoms that represent the ring, face, or molecular plane
 # relative to which the pi-hole search should be performed.
 AUTO_REFERENCE_ATOMS = (1, 3, 6, 10)
+
+# Two 1-based atom indices used for sigma-hole searches in auto mode.
+# The order matters: (A, B) searches beyond atom B along the A -> B bond
+# extension. For a C-Cl sigma-hole, use (C_index, Cl_index).
+AUTO_BOND_ATOMS = (1, 2)
 
 # Optional 1-based atom index used to orient the positive local z direction.
 # Set to None to keep the normal direction from the plane fit.
@@ -73,6 +83,13 @@ MANUAL_TARGETS = (
         # VTX surface filename inside this folder.
         vtx_filename="vtx.txt",
     ),
+    # Example sigma-hole target for HOLE_TYPE = "sigma":
+    # SigmaTargetSpec(
+    #     folder=Path("data/example_folder"),
+    #     bond_atom_indices_1based=(1, 2),
+    #     xyz_filename=None,
+    #     vtx_filename="vtx.txt",
+    # ),
 )
 
 
@@ -96,14 +113,18 @@ ANALYSIS_OPTIONS = {
     # -----------------------------------------------------------------------
     # Maximum radial distance from the local z axis, in angstrom.
     # Smaller values make the search more centered on the selected axis.
+    # For pi-holes, the axis is the reference-plane normal.
+    # For sigma-holes, the axis is the ordered bond extension.
     "max_distance_from_axis": 0.25,
 
-    # Minimum absolute z distance from the reference plane, in angstrom.
-    # Points closer than this to the plane are ignored.
+    # Minimum z distance, in angstrom, used for the axial search.
+    # Pi-hole mode searches both +z and -z with this absolute minimum.
+    # Sigma-hole mode searches only forward from the terminal bond atom.
     "z_search_min": 0.8,
 
-    # Maximum absolute z distance from the reference plane, in angstrom.
-    # Points farther than this from the plane are ignored.
+    # Maximum z distance, in angstrom, used for the axial search.
+    # Pi-hole mode applies this to both sides of the reference plane.
+    # Sigma-hole mode applies this beyond the terminal bond atom.
     "z_search_max": 3.0,
 
     # -----------------------------------------------------------------------

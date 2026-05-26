@@ -47,6 +47,36 @@ class TargetSpec:
 
 
 @dataclass(frozen=True)
+class SigmaTargetSpec:
+    """
+    Description of one sigma-hole target.
+
+    The bond is ordered. For bond_atom_indices_1based=(A, B), the sigma-hole is
+    searched beyond atom B along the A -> B bond extension.
+    """
+
+    folder: PathLike
+    bond_atom_indices_1based: Tuple[int, int]
+    xyz_filename: Optional[str] = None
+    vtx_filename: str = "vtx.txt"
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "folder", Path(self.folder))
+        object.__setattr__(self, "bond_atom_indices_1based", tuple(self.bond_atom_indices_1based))
+        if len(self.bond_atom_indices_1based) != 2:
+            raise ValueError("bond_atom_indices_1based must contain exactly two atoms.")
+        if any(index < 1 for index in self.bond_atom_indices_1based):
+            raise ValueError("bond atom indices must use positive 1-based indexing.")
+        if self.bond_atom_indices_1based[0] == self.bond_atom_indices_1based[1]:
+            raise ValueError("bond_atom_indices_1based must contain two different atoms.")
+        if not str(self.vtx_filename).strip():
+            raise ValueError("vtx_filename must be non-empty.")
+
+
+AnalysisTarget = Union[TargetSpec, SigmaTargetSpec]
+
+
+@dataclass(frozen=True)
 class AnalysisConfig:
     """
     Global analysis parameters.
@@ -68,7 +98,8 @@ class AnalysisConfig:
     # -------------------------------------------------------------------------
     # Targets
     # -------------------------------------------------------------------------
-    targets: Tuple[TargetSpec, ...]
+    targets: Tuple[AnalysisTarget, ...]
+    hole_type: str = "pi"
 
     # -------------------------------------------------------------------------
     # Coordinate units
@@ -168,7 +199,16 @@ class AnalysisConfig:
     def __post_init__(self) -> None:
         object.__setattr__(self, "targets", tuple(self.targets))
         if not self.targets:
-            raise ValueError("targets must contain at least one TargetSpec.")
+            raise ValueError("targets must contain at least one analysis target.")
+
+        hole_type = self.hole_type.lower().strip()
+        object.__setattr__(self, "hole_type", hole_type)
+        if hole_type not in {"pi", "sigma"}:
+            raise ValueError("hole_type must be either 'pi' or 'sigma'.")
+        if hole_type == "pi" and not all(isinstance(target, TargetSpec) for target in self.targets):
+            raise ValueError("pi-hole analysis requires TargetSpec targets.")
+        if hole_type == "sigma" and not all(isinstance(target, SigmaTargetSpec) for target in self.targets):
+            raise ValueError("sigma-hole analysis requires SigmaTargetSpec targets.")
 
         units = {"angstrom", "bohr"}
         if self.xyz_coord_unit.lower().strip() not in units:
@@ -221,11 +261,11 @@ class MoleculePaths:
     xyz_file: Path
     output_all_candidates_csv: Path
     output_validated_txt: Path
-    output_pihole_xyz: Path
+    output_hole_xyz: Path
     output_plot_dir: Path
 
 
-def make_paths(target: TargetSpec) -> MoleculePaths:
+def make_paths(target: AnalysisTarget, hole_type: str = "pi") -> MoleculePaths:
     """
     Build input and output paths for one target.
 
@@ -250,12 +290,23 @@ def make_paths(target: TargetSpec) -> MoleculePaths:
     if not xyz_file.exists():
         raise FileNotFoundError(f"XYZ file not found: {xyz_file}")
 
+    if hole_type == "pi":
+        candidates_csv = "pi_hole_candidates.csv"
+        validated_txt = "pi_holes_validated.txt"
+        hole_xyz = "molecule_with_piholes.xyz"
+        plot_dir_name = "pihole_plots"
+    else:
+        candidates_csv = "sigma_hole_candidates.csv"
+        validated_txt = "sigma_holes_validated.txt"
+        hole_xyz = "molecule_with_sigmaholes.xyz"
+        plot_dir_name = "sigmahole_plots"
+
     return MoleculePaths(
         folder=folder,
         vtx_file=vtx_file,
         xyz_file=xyz_file,
-        output_all_candidates_csv=folder / "pi_hole_candidates.csv",
-        output_validated_txt=folder / "pi_holes_validated.txt",
-        output_pihole_xyz=folder / "molecule_with_piholes.xyz",
-        output_plot_dir=folder / "pihole_plots",
+        output_all_candidates_csv=folder / candidates_csv,
+        output_validated_txt=folder / validated_txt,
+        output_hole_xyz=folder / hole_xyz,
+        output_plot_dir=folder / plot_dir_name,
     )

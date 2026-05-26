@@ -141,12 +141,12 @@ def compute_sector_means(
         & (np.abs(dz) <= config.sector_half_height)
     )
 
-    if side == "above":
+    if side in {"above", "forward"}:
         shell_mask &= local_coords[:, 2] > 0.0
     elif side == "below":
         shell_mask &= local_coords[:, 2] < 0.0
     else:
-        raise ValueError("side must be either 'above' or 'below'.")
+        raise ValueError("side must be 'above', 'below', or 'forward'.")
 
     shell_indices = np.where(shell_mask)[0]
     if len(shell_indices) == 0:

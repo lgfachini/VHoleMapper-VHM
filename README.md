@@ -1,13 +1,13 @@
-# 🧲 VHoleMapper (VHM): A Pi-Hole Detection and Analysis Toolkit
+# 🧲 VHoleMapper (VHM): A Pi-Hole and Sigma-Hole Detection Toolkit
 
-VHoleMapper (VHM) is a Python-based toolkit for detecting, validating, and visualizing pi-holes on molecular electrostatic potential (ESP) surfaces.
+VHoleMapper (VHM) is a Python-based toolkit for detecting, validating, and visualizing pi-holes and sigma-holes on molecular electrostatic potential (ESP) surfaces.
 
 It is designed for batch workflows where each molecular system is stored in its own folder with:
 
 * an ESP surface file, usually `vtx.txt`
 * an XYZ molecular geometry, usually named after the folder
 
-VHM builds a local molecular reference frame, searches for ESP maxima above and below the selected plane, optionally applies a Moving Least Squares (MLS) derivative check, and validates candidates by comparing the candidate potential with surrounding angular sector averages.
+VHM builds a local molecular reference frame, searches for ESP maxima in a focused cylindrical region, optionally applies a Moving Least Squares (MLS) derivative check, and validates candidates by comparing the candidate potential with surrounding angular sector averages.
 
 ---
 
@@ -49,8 +49,10 @@ VHoleMapper-VHM/
 
 * Reads molecular geometries from `.xyz` files.
 * Reads ESP surface points and potentials from `vtx.txt`.
-* Defines a local coordinate frame from four user-selected reference atoms.
-* Searches both sides of the reference plane for discrete local ESP maxima.
+* Defines a pi-hole local coordinate frame from four user-selected reference atoms.
+* Defines a sigma-hole local coordinate frame from two ordered bond atoms.
+* Searches both sides of a reference plane for pi-hole ESP maxima.
+* Searches beyond a terminal bond atom for sigma-hole ESP maxima.
 * Supports automatic batch mode and manual per-system target definitions.
 * Optionally validates candidates with MLS gradient/Hessian criteria.
 * Uses angular sector sampling to estimate:
@@ -124,7 +126,14 @@ vhm   # after pip install -e .
 
 ---
 
-## 🧭 Run Modes
+## 🧭 Run Modes and Hole Types
+
+Choose the analysis type in [config/settings.py](config/settings.py):
+
+```python
+HOLE_TYPE = "pi"     # plane-normal pi-hole search
+HOLE_TYPE = "sigma"  # bond-extension sigma-hole search
+```
 
 ### 🔹 Automatic Mode
 
@@ -136,12 +145,13 @@ RUN_MODE = "auto"
 DATA_DIR = Path("data")
 AUTO_FOLDER_GLOB = "*"
 AUTO_REFERENCE_ATOMS = (1, 3, 6, 10)
+AUTO_BOND_ATOMS = (1, 2)
 AUTO_ORIENTATION_ATOM = None
 AUTO_XYZ_FILENAME = None
 AUTO_VTX_FILENAME = "vtx.txt"
 ```
 
-Useful when all systems share the same atom ordering and topology.
+For `HOLE_TYPE = "pi"`, `AUTO_REFERENCE_ATOMS` defines the reference plane. For `HOLE_TYPE = "sigma"`, `AUTO_BOND_ATOMS = (A, B)` searches beyond atom `B` along the `A -> B` bond extension.
 
 ### 🔹 Manual Mode
 
@@ -155,6 +165,22 @@ MANUAL_TARGETS = (
         folder=Path("data/benzene"),
         reference_atom_indices_1based=(1, 3, 6, 10),
         orientation_atom_index_1based=None,
+        xyz_filename=None,
+        vtx_filename="vtx.txt",
+    ),
+)
+```
+
+For sigma-hole mode, use `SigmaTargetSpec`:
+
+```python
+RUN_MODE = "manual"
+HOLE_TYPE = "sigma"
+
+MANUAL_TARGETS = (
+    SigmaTargetSpec(
+        folder=Path("data/chlorobenzene"),
+        bond_atom_indices_1based=(1, 7),  # C-Cl, search beyond Cl
         xyz_filename=None,
         vtx_filename="vtx.txt",
     ),
@@ -186,7 +212,7 @@ Accepted units are `"angstrom"` and `"bohr"`. Internally, VHM converts coordinat
 "z_search_max": 3.0,
 ```
 
-These parameters define the cylindrical region around the local z axis where candidate pi-holes are searched.
+These parameters define the cylindrical region around the local z axis where hole candidates are searched. For pi-holes, VHM searches both positive and negative z. For sigma-holes, VHM searches only forward beyond the terminal bond atom.
 
 ### 🔍 Local Maximum Search
 
@@ -260,9 +286,9 @@ For each target folder, VHM performs:
 1. Resolve input and output paths.
 2. Read the XYZ geometry and VTX surface data.
 3. Convert coordinates to angstrom.
-4. Build the local frame from four reference atoms.
+4. Build the local frame from either four reference atoms (`pi`) or two ordered bond atoms (`sigma`).
 5. Transform surface points into local coordinates.
-6. Search above and below the reference plane for local ESP maxima.
+6. Search the configured cylindrical region for local ESP maxima.
 7. Optionally apply MLS derivative validation.
 8. Run angular sector validation.
 9. Write CSV, TXT, XYZ, and SVG outputs.
@@ -281,6 +307,17 @@ data/system_name/
 |-- molecule_with_piholes.xyz
 `-- pihole_plots/
     `-- pihole_01_above_idx1234.svg
+```
+
+Sigma-hole mode writes analogous files:
+
+```text
+data/system_name/
+|-- sigma_hole_candidates.csv
+|-- sigma_holes_validated.txt
+|-- molecule_with_sigmaholes.xyz
+`-- sigmahole_plots/
+    `-- sigmahole_01_forward_idx1234.svg
 ```
 
 ### `pi_hole_candidates.csv`

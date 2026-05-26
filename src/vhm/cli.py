@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Iterable, Optional, Tuple
 
 from . import __version__
-from .config import AnalysisConfig, TargetSpec
+from .config import AnalysisConfig, AnalysisTarget, SigmaTargetSpec, TargetSpec
 
 
 def project_root() -> Path:
@@ -62,11 +62,37 @@ def build_auto_targets(
     )
 
 
-def selected_targets(settings) -> Tuple[TargetSpec, ...]:
+def build_auto_sigma_targets(
+    folders: Iterable[Path],
+    bond_atoms: Tuple[int, int],
+    xyz_filename: Optional[str],
+    vtx_filename: str,
+) -> Tuple[SigmaTargetSpec, ...]:
+    """Create SigmaTargetSpec entries for folders discovered in auto mode."""
+    return tuple(
+        SigmaTargetSpec(
+            folder=folder,
+            bond_atom_indices_1based=bond_atoms,
+            xyz_filename=xyz_filename,
+            vtx_filename=vtx_filename,
+        )
+        for folder in folders
+    )
+
+
+def selected_targets(settings) -> Tuple[AnalysisTarget, ...]:
     """Resolve analysis targets from the user-editable settings module."""
     run_mode = getattr(settings, "RUN_MODE", "auto")
+    hole_type = getattr(settings, "HOLE_TYPE", "pi").lower().strip()
     if run_mode == "auto":
         folders = discover_folders(settings.DATA_DIR, getattr(settings, "AUTO_FOLDER_GLOB", "*"))
+        if hole_type == "sigma":
+            return build_auto_sigma_targets(
+                folders=folders,
+                bond_atoms=settings.AUTO_BOND_ATOMS,
+                xyz_filename=getattr(settings, "AUTO_XYZ_FILENAME", None),
+                vtx_filename=getattr(settings, "AUTO_VTX_FILENAME", "vtx.txt"),
+            )
         return build_auto_targets(
             folders=folders,
             reference_atoms=settings.AUTO_REFERENCE_ATOMS,
@@ -86,6 +112,7 @@ def selected_targets(settings) -> Tuple[TargetSpec, ...]:
 
 def config_from_settings(settings) -> AnalysisConfig:
     kwargs = dict(getattr(settings, "ANALYSIS_OPTIONS", {}))
+    kwargs["hole_type"] = getattr(settings, "HOLE_TYPE", "pi")
     return AnalysisConfig(targets=selected_targets(settings), **kwargs)
 
 
@@ -112,11 +139,17 @@ def main(argv: Optional[list[str]] = None) -> int:
 
         print("Targets selected for analysis:")
         for target in config.targets:
-            print(
-                f"  - {Path(target.folder)} | "
-                f"reference atoms = {target.reference_atom_indices_1based} | "
-                f"orientation atom = {target.orientation_atom_index_1based}"
-            )
+            if isinstance(target, SigmaTargetSpec):
+                print(
+                    f"  - {Path(target.folder)} | "
+                    f"sigma bond atoms = {target.bond_atom_indices_1based}"
+                )
+            else:
+                print(
+                    f"  - {Path(target.folder)} | "
+                    f"reference atoms = {target.reference_atom_indices_1based} | "
+                    f"orientation atom = {target.orientation_atom_index_1based}"
+                )
 
         run_batch(config)
     except (OSError, RuntimeError, ValueError, IndexError) as exc:

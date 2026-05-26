@@ -35,17 +35,18 @@ def format_optional(value: Optional[float], fmt: str = ".6f") -> str:
     return format(value, fmt)
 
 
-def save_validated_txt(results: List[CandidateResult], out_txt: Path) -> None:
-    """Save a human-readable TXT report with validated pi-holes."""
+def save_validated_txt(results: List[CandidateResult], out_txt: Path, hole_label: str = "pi-hole") -> None:
+    """Save a human-readable TXT report with validated holes."""
     validated = [result for result in results if result.validated]
     out_txt.parent.mkdir(parents=True, exist_ok=True)
+    title = f"VALIDATED {hole_label.upper()}S"
 
     with out_txt.open("w", encoding="utf-8") as handle:
-        handle.write("VALIDATED PI-HOLES\n")
+        handle.write(f"{title}\n")
         handle.write("=" * 80 + "\n\n")
 
         if not validated:
-            handle.write("No validated pi-hole found.\n")
+            handle.write(f"No validated {hole_label} found.\n")
             return
 
         for counter, result in enumerate(sorted(validated, key=lambda item: item.vs_max, reverse=True), start=1):
@@ -83,15 +84,16 @@ def save_molecule_with_piholes_xyz(
     results: List[CandidateResult],
     out_xyz: Path,
     only_validated: bool = True,
+    hole_label: str = "pi-holes",
 ) -> None:
-    """Write an XYZ file containing the molecule plus pi-holes as dummy X atoms."""
+    """Write an XYZ file containing the molecule plus holes as dummy X atoms."""
     selected = [result for result in results if result.validated] if only_validated else results
     natoms_total = len(atom_symbols) + len(selected)
 
     out_xyz.parent.mkdir(parents=True, exist_ok=True)
     with out_xyz.open("w", encoding="utf-8") as handle:
         handle.write(f"{natoms_total}\n")
-        handle.write("Molecule + pi-holes as dummy atoms X\n")
+        handle.write(f"Molecule + {hole_label} as dummy atoms X\n")
 
         for symbol, coord in zip(atom_symbols, atom_coords_global):
             handle.write(f"{symbol:2s}  {coord[0]: .8f}  {coord[1]: .8f}  {coord[2]: .8f}\n")

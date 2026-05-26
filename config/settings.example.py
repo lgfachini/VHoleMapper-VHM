@@ -2,14 +2,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from vhm import TargetSpec
+from vhm import SigmaTargetSpec, TargetSpec
 
 
 RUN_MODE = "auto"
+HOLE_TYPE = "pi"
 
 DATA_DIR = Path("data")
 AUTO_FOLDER_GLOB = "*"
 AUTO_REFERENCE_ATOMS = (1, 2, 3, 4)
+AUTO_BOND_ATOMS = (1, 2)
 AUTO_ORIENTATION_ATOM = None
 AUTO_XYZ_FILENAME = None
 AUTO_VTX_FILENAME = "vtx.txt"
@@ -22,6 +24,12 @@ MANUAL_TARGETS = (
         xyz_filename=None,
         vtx_filename="vtx.txt",
     ),
+    # SigmaTargetSpec(
+    #     folder=Path("data/system_name"),
+    #     bond_atom_indices_1based=(1, 2),
+    #     xyz_filename=None,
+    #     vtx_filename="vtx.txt",
+    # ),
 )
 
 ANALYSIS_OPTIONS = {

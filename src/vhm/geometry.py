@@ -67,6 +67,37 @@ def build_local_frame(
     return LocalFrame(origin=origin, rotation_matrix=rotation_matrix)
 
 
+def build_bond_frame(
+    atom_coords: np.ndarray,
+    bond_indices_1based: Tuple[int, int],
+) -> LocalFrame:
+    """
+    Build a right-handed local frame for sigma-hole analysis.
+
+    For bond_indices_1based=(A, B), the origin is atom B and local +z points
+    from atom A to atom B. Positive local z therefore follows the bond
+    extension beyond atom B.
+    """
+    if len(bond_indices_1based) != 2:
+        raise ValueError("Exactly two bond atoms are required.")
+
+    validate_atom_indices(atom_coords, bond_indices_1based, "bond")
+    atom_a_idx0, atom_b_idx0 = (idx - 1 for idx in bond_indices_1based)
+    origin = atom_coords[atom_b_idx0]
+    z_axis = normalize(atom_coords[atom_b_idx0] - atom_coords[atom_a_idx0])
+
+    helper = np.array([1.0, 0.0, 0.0], dtype=float)
+    if abs(float(np.dot(helper, z_axis))) > 0.90:
+        helper = np.array([0.0, 1.0, 0.0], dtype=float)
+
+    x_axis = normalize(helper - np.dot(helper, z_axis) * z_axis)
+    y_axis = normalize(np.cross(z_axis, x_axis))
+    x_axis = normalize(np.cross(y_axis, z_axis))
+
+    rotation_matrix = np.vstack([x_axis, y_axis, z_axis])
+    return LocalFrame(origin=origin, rotation_matrix=rotation_matrix)
+
+
 def to_local(coords: np.ndarray, frame: LocalFrame) -> np.ndarray:
     """Transform global coordinates to the local frame."""
     return (coords - frame.origin) @ frame.rotation_matrix.T
