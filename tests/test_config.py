@@ -1,8 +1,10 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from vhm import AnalysisConfig, SigmaTargetSpec, TargetSpec
+from vhm.cli import selected_targets
 
 
 def target() -> TargetSpec:
@@ -64,3 +66,34 @@ def test_sigma_config_accepts_sigma_target():
     config = AnalysisConfig(targets=(sigma_target,), hole_type="sigma")
 
     assert config.hole_type == "sigma"
+
+
+def test_manual_targets_resolve_relative_folders_from_project_root():
+    settings = SimpleNamespace(
+        RUN_MODE=" Manual ",
+        HOLE_TYPE="pi",
+        MANUAL_TARGETS=(target(),),
+    )
+
+    selected = selected_targets(settings)
+
+    assert selected[0].folder.is_absolute()
+    assert selected[0].folder.name == "benzene"
+
+
+def test_manual_sigma_targets_resolve_relative_folders_from_project_root():
+    settings = SimpleNamespace(
+        RUN_MODE="manual",
+        HOLE_TYPE="sigma",
+        MANUAL_TARGETS=(
+            SigmaTargetSpec(
+                folder=Path("data/benzene"),
+                bond_atom_indices_1based=(1, 2),
+            ),
+        ),
+    )
+
+    selected = selected_targets(settings)
+
+    assert selected[0].folder.is_absolute()
+    assert selected[0].folder.name == "benzene"

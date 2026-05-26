@@ -1,7 +1,5 @@
 from __future__ import annotations
-
 from pathlib import Path
-
 from vhm import SigmaTargetSpec, TargetSpec
 
 
@@ -9,9 +7,9 @@ from vhm import SigmaTargetSpec, TargetSpec
 #
 # Run from the project root:
 #   python main.py
-#   python -m vhm
 #
 # After installing with `pip install -e .`, you can also run:
+#   python -m vhm
 #   vhm
 
 
@@ -27,7 +25,7 @@ RUN_MODE = "auto"
 # Select which hole type to search.
 #   "pi"    -> current plane-normal search from four reference atoms.
 #   "sigma" -> bond-extension search from two ordered bond atoms.
-HOLE_TYPE = "pi"
+HOLE_TYPE = "sigma"
 
 # Root folder containing one subfolder per molecular system.
 # Relative paths are resolved from the project root.
@@ -38,7 +36,7 @@ DATA_DIR = Path("data")
 #   "*"       -> all direct subfolders
 #   "conf*"   -> folders whose names start with "conf"
 #   "*benzene" -> folders whose names end with "benzene"
-AUTO_FOLDER_GLOB = "*"
+AUTO_FOLDER_GLOB = "SbF3*"
 
 # Four 1-based atom indices used to fit the reference plane and define the
 # local frame. Choose atoms that represent the ring, face, or molecular plane
@@ -48,7 +46,7 @@ AUTO_REFERENCE_ATOMS = (1, 3, 6, 10)
 # Two 1-based atom indices used for sigma-hole searches in auto mode.
 # The order matters: (A, B) searches beyond atom B along the A -> B bond
 # extension. For a C-Cl sigma-hole, use (C_index, Cl_index).
-AUTO_BOND_ATOMS = (1, 2)
+AUTO_BOND_ATOMS = (2, 1)
 
 # Optional 1-based atom index used to orient the positive local z direction.
 # Set to None to keep the normal direction from the plane fit.

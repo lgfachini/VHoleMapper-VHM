@@ -22,14 +22,14 @@ def read_xyz(xyz_file: Path, coord_unit: str, bohr_to_ang: float) -> Tuple[List[
         raise FileNotFoundError(f"XYZ file not found: {xyz_file}")
 
     with xyz_file.open("r", encoding="utf-8") as handle:
-        lines = [line.rstrip() for line in handle if line.strip()]
+        lines = [line.rstrip() for line in handle]
 
     try:
         natoms = int(lines[0])
     except Exception as exc:
         raise ValueError("The first XYZ line must contain the number of atoms.") from exc
 
-    atom_lines = lines[2:2 + natoms]
+    atom_lines = [line for line in lines[2:] if line.strip()][:natoms]
     if len(atom_lines) != natoms:
         raise ValueError("The number of XYZ atom lines is inconsistent with the header.")
 

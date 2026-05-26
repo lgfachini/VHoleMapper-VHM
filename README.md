@@ -63,7 +63,7 @@ VHoleMapper-VHM/
   * `Delta V_hole`
   * anisotropy angle
 * Exports CSV, TXT, XYZ, and SVG outputs.
-* Runs from `config/settings.py` via `python main.py`, `python -m vhm`, or `vhm`.
+* Runs from `config/settings.py` via `python main.py`, or via `python -m vhm` / `vhm` after installing the package.
 
 ---
 
@@ -117,11 +117,11 @@ Then run:
 python main.py
 ```
 
-Alternatives:
+After installing with `pip install -e .`, these alternatives are also available:
 
 ```bash
 python -m vhm
-vhm   # after pip install -e .
+vhm
 ```
 
 ---

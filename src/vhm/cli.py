@@ -80,9 +80,28 @@ def build_auto_sigma_targets(
     )
 
 
+def resolve_manual_target(target: AnalysisTarget) -> AnalysisTarget:
+    """Return a target whose folder is absolute when the user supplied a relative path."""
+    folder = resolve_project_path(target.folder)
+    if isinstance(target, SigmaTargetSpec):
+        return SigmaTargetSpec(
+            folder=folder,
+            bond_atom_indices_1based=target.bond_atom_indices_1based,
+            xyz_filename=target.xyz_filename,
+            vtx_filename=target.vtx_filename,
+        )
+    return TargetSpec(
+        folder=folder,
+        reference_atom_indices_1based=target.reference_atom_indices_1based,
+        orientation_atom_index_1based=target.orientation_atom_index_1based,
+        xyz_filename=target.xyz_filename,
+        vtx_filename=target.vtx_filename,
+    )
+
+
 def selected_targets(settings) -> Tuple[AnalysisTarget, ...]:
     """Resolve analysis targets from the user-editable settings module."""
-    run_mode = getattr(settings, "RUN_MODE", "auto")
+    run_mode = getattr(settings, "RUN_MODE", "auto").lower().strip()
     hole_type = getattr(settings, "HOLE_TYPE", "pi").lower().strip()
     if run_mode == "auto":
         folders = discover_folders(settings.DATA_DIR, getattr(settings, "AUTO_FOLDER_GLOB", "*"))
@@ -105,7 +124,7 @@ def selected_targets(settings) -> Tuple[AnalysisTarget, ...]:
         manual_targets = tuple(getattr(settings, "MANUAL_TARGETS", ()))
         if not manual_targets:
             raise RuntimeError("RUN_MODE is 'manual', but MANUAL_TARGETS is empty.")
-        return manual_targets
+        return tuple(resolve_manual_target(target) for target in manual_targets)
 
     raise ValueError("RUN_MODE must be either 'auto' or 'manual'.")
 

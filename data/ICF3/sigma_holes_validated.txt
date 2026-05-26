@@ -1,0 +1,28 @@
+VALIDATED SIGMA-HOLES
+================================================================================
+
+Candidate 1
+--------------------------------------------------------------------------------
+Side: forward
+Point index: 2205
+Local coordinates (Angstrom): (0.011887, -0.018341, 2.147653)
+Global coordinates (Angstrom): (-1.882643, 9.084804, 1.816819)
+V_s,max (kcal/mol): 33.201406
+Number of MLS neighbors: None
+|grad V| 3D (kcal mol^-1 Angstrom^-1): nan
+grad V 3D = (nan, nan, nan)
+3D Hessian eigenvalues: (nan, nan, nan)
+Shift to 3D stationary point (Angstrom): None
+|grad V| tangential (kcal mol^-1 Angstrom^-1): nan
+Tangential grad V = (nan, nan)
+Tangential Hessian eigenvalues: (nan, nan)
+Shift to tangential stationary point (Angstrom): None
+V_hole,mean (kcal/mol): 12.614502
+V_hole,max (kcal/mol): 13.000074
+V_hole,min (kcal/mol): 12.101152
+Delta V_hole (kcal/mol): 0.898921
+Anisotropy angle (degrees): 45.000000
+Minimum sector: S2
+Maximum sector: S3
+Note: Validated.
+
